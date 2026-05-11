@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Bot Auto Order Bibi</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a26;
+      --border: rgba(255,255,255,0.07);
+      --accent: #7c5cfc;
+      --accent2: #c45cfc;
+      --gold: #f5c842;
+      --green: #3dffa0;
+      --red: #ff4f6a;
+      --blue: #4fc3f7;
+      --text: #f0eeff;
+      --muted: rgba(240,238,255,0.45);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background decorative blobs */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -120px;
+      right: -80px;
+      width: 360px;
+      height: 360px;
+      background: radial-gradient(circle, rgba(124,92,252,0.18) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -100px;
+      left: -60px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(196,92,252,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 0 16px 100px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      padding: 24px 0 20px;
+      text-align: center;
+    }
+    .header-logo {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 8px 32px rgba(124,92,252,0.4);
+    }
+    .header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+    .header-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .user-greeting {
+      margin-top: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .user-greeting span { color: var(--text); font-weight: 500; }
+
+    /* ===== SALDO CARD ===== */
+    .saldo-card {
+      background: linear-gradient(135deg, #1a1230, #221538);
+      border: 1px solid rgba(124,92,252,0.3);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .saldo-card::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(124,92,252,0.2) 0%, transparent 70%);
+    }
+    .saldo-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .saldo-amount {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--green);
+    }
+    .saldo-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .saldo-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .saldo-btn.topup {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(124,92,252,0.35);
+    }
+    .saldo-btn.voucher {
+      background: var(--surface2);
+      color: var(--gold);
+      border: 1px solid rgba(245,200,66,0.25);
+    }
+    .saldo-btn:active { transform: scale(0.97); }
+
+    /* ===== SECTION TITLE ===== */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 12px;
+      margin-top: 20px;
+    }
+
+    /* ===== MENU GRID ===== */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .menu-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .menu-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .menu-card:active { transform: scale(0.97); border-color: var(--accent); }
+    .menu-card:active::after { opacity: 1; }
+
+    .menu-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+    .menu-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .menu-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .menu-card.nokos { border-color: rgba(63,255,160,0.15); }
+    .menu-card.nokos .menu-icon-bg { background: rgba(63,255,160,0.1); }
+    .menu-card.script { border-color: rgba(79,195,247,0.15); }
+    .menu-card.apps { border-color: rgba(245,200,66,0.15); }
+    .menu-card.vps { border-color: rgba(255,79,106,0.15); }
+    .menu-card.panel { border-color: rgba(124,92,252,0.2); }
+    .menu-card.tools { border-color: rgba(196,92,252,0.15); }
+
+    /* ===== WIDE CARD ===== */
+    .wide-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+    .wide-card:active { transform: scale(0.98); border-color: var(--accent); }
+    .wide-icon {
+      font-size: 24px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface2);
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+    .wide-info { flex: 1; }
+    .wide-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .wide-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .wide-arrow { color: var(--muted); font-size: 18px; }
+
+    /* ===== BADGE ===== */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 50px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-green { background: rgba(63,255,160,0.15); color: var(--green); }
+    .badge-gold  { background: rgba(245,200,66,0.15); color: var(--gold); }
+    .badge-red   { background: rgba(255,79,106,0.15); color: var(--red); }
+    .badge-blue  { background: rgba(79,195,247,0.15); color: var(--blue); }
+    .badge-purple{ background: rgba(124,92,252,0.2);  color: #c4aaff; }
+
+    /* ===== BOTTOM NAV ===== */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      gap: 3px;
+    }
+    .nav-icon { font-size: 20px; }
+    .nav-label { font-size: 10px; color: var(--muted); font-weight: 500; }
+    .nav-item.active .nav-label { color: var(--accent); }
+    .nav-item.active .nav-icon { filter: drop-shadow(0 0 6px var(--accent)); }
+
+    /* ===== PAGE SECTIONS ===== */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ===== PROFILE PAGE ===== */
+    .profile-avatar {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+      margin: 0 auto 12px;
+      box-shadow: 0 8px 32px rgba(124,92,252,0.4);
+    }
+    .profile-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      text-align: center;
+    }
+    .profile-id {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 4px;
+    }
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .stat-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* ===== CONTACT ROW ===== */
+    .contact-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .contact-btn {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .contact-btn:active { transform: scale(0.97); background: var(--surface2); }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px 24px 0 0;
+      padding: 24px 20px 32px;
+      width: 100%;
+      max-width: 480px;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+    .modal-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+    .modal-input:focus { border-color: var(--accent); }
+    .modal-confirm {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+    }
+    .modal-confirm:active { transform: scale(0.98); }
+    .modal-cancel {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .modal-pill {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .pill {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      font-size: 13px;
+      cursor: pointer;
+      background: var(--surface2);
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .pill.active, .pill:active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      top: 20px; left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 10px 20px;
+      font-size: 14px;
+      z-index: 999;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      white-space: nowrap;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 0; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ===== HOME PAGE ===== -->
+  <div class="page active" id="page-home">
+
+    <div class="header">
+      <div class="header-logo">🛍️</div>
+      <h1>Bot Auto Order Bibi</h1>
+      <div class="header-sub">Belanja cepat, auto kirim, terpercaya</div>
+      <div class="user-greeting">👤 Halo, <span id="username-display">Loading...</span></div>
+    </div>
+
+    <!-- SALDO CARD -->
+    <div class="saldo-card">
+      <div class="saldo-label">💼 Saldo Kamu</div>
+      <div class="saldo-amount" id="saldo-display">Rp 0</div>
+      <div class="saldo-actions">
+        <button class="saldo-btn topup" onclick="openTopup()">➕ Top Up Saldo</button>
+        <button class="saldo-btn voucher" onclick="openVoucher()">🎟️ Voucher</button>
+      </div>
+    </div>
+
+    <!-- MENU UTAMA -->
+    <div class="section-title">🛒 Menu Belanja</div>
+    <div class="menu-grid">
+      <div class="menu-card nokos" onclick="sendCmd('nokos')">
+        <div class="menu-icon">📲</div>
+        <div class="menu-name">Nokos OTP</div>
+        <div class="menu-desc">Beli nomor virtual untuk verifikasi</div>
+      </div>
+      <div class="menu-card script" onclick="sendCmd('scripts')">
+        <div class="menu-icon">📂</div>
+        <div class="menu-name">Script</div>
+        <div class="menu-desc">Source code & tools developer</div>
+      </div>
+      <div class="menu-card apps" onclick="sendCmd('apps')">
+        <div class="menu-icon">📱</div>
+        <div class="menu-name">Apps Premium</div>
+        <div class="menu-desc">Akun aplikasi premium siap pakai</div>
+      </div>
+      <div class="menu-card panel" onclick="sendCmd('panel')">
+        <div class="menu-icon">🖥️</div>
+        <div class="menu-name">Panel</div>
+        <div class="menu-desc">Hosting & server panel pterodactyl</div>
+      </div>
+      <div class="menu-card vps" onclick="sendCmd('vps')">
+        <div class="menu-icon">⚡</div>
+        <div class="menu-name">VPS</div>
+        <div class="menu-desc">Virtual Private Server DigitalOcean</div>
+      </div>
+      <div class="menu-card tools" onclick="sendCmd('tools')">
+        <div class="menu-icon">🛠️</div>
+        <div class="menu-name">Tools</div>
+        <div class="menu-desc">AI tools & utilitas lainnya</div>
+      </div>
+    </div>
+
+    <!-- LINK EXTERNAL -->
+    <div class="section-title">🔗 Info & Kontak</div>
+    <div class="wide-card" onclick="openLink('channel')">
+      <div class="wide-icon">📢</div>
+      <div class="wide-info">
+        <div class="wide-title">Channel Owner</div>
+        <div class="wide-sub">Update produk & promo terbaru</div>
+      </div>
+      <div class="wide-arrow">›</div>
+    </div>
+    <div class="wide-card" onclick="openLink('group')">
+      <div class="wide-icon">🏘️</div>
+      <div class="wide-info">
+        <div class="wide-title">Marketplace Owner</div>
+        <div class="wide-sub">Jual beli & diskusi komunitas</div>
+      </div>
+      <div class="wide-arrow">›</div>
+    </div>
+    <div class="wide-card" onclick="sendCmd('contact')">
+      <div class="wide-icon">👑</div>
+      <div class="wide-info">
+        <div class="wide-title">Hubungi Owner</div>
+        <div class="wide-sub">Pertanyaan, komplain, atau CS</div>
+      </div>
+      <div class="wide-arrow">›</div>
+    </div>
+
+    <!-- GARANSI -->
+    <div class="section-title">🛡️ Garansi</div>
+    <div class="wide-card" onclick="sendCmd('garansi')">
+      <div class="wide-icon">🛡️</div>
+      <div class="wide-info">
+        <div class="wide-title">Info Garansi Panel</div>
+        <div class="wide-sub">Syarat & ketentuan garansi produk</div>
+      </div>
+      <div class="wide-arrow">›</div>
+    </div>
+
+  </div><!-- end page-home -->
+
+  <!-- ===== PROFILE PAGE ===== -->
+  <div class="page" id="page-profile">
+    <div style="padding-top: 28px; text-align: center; margin-bottom: 16px;">
+      <div class="profile-avatar">👤</div>
+      <div class="profile-name" id="profile-name">-</div>
+      <div class="profile-id" id="profile-id">ID: -</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-val" id="stat-saldo">Rp 0</div>
+        <div class="stat-lbl">Saldo Aktif</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-status">👤 User</div>
+        <div class="stat-lbl">Status Akun</div>
+      </div>
+    </div>
+
+    <div class="section-title">⚙️ Akun</div>
+    <div class="wide-card" onclick="openTopup()">
+      <div class="wide-icon">💳</div>
+      <div class="wide-info">
+        <div class="wide-title">Top Up Saldo</div>
+        <div class="wide-sub">Via QRIS otomatis</div>
+      </div>
+      <div class="wide-arrow">›</div>
+    </div>
+    <div class="wide-card" onclick="openVoucher()">
+      <div class="wide-icon">🎟️</div>
+      <div class="wide-info">
+        <div class="wide-title">Redeem Voucher</div>
+        <div class="wide-sub">Masukkan kode diskon</div>
+      </div>
+      <div class="wide-arrow">›</div>
+    </div>
+    <div class="wide-card" onclick="sendCmd('riwayat')">
+      <div class="wide-icon">📜</div>
+      <div class="wide-info">
+        <div class="wide-title">Riwayat Transaksi</div>
+        <div class="wide-sub">Lihat semua pembelian</div>
+      </div>
+      <div class="wide-arrow">›</div>
+    </div>
+    <div class="wide-card" onclick="sendCmd('contact')">
+      <div class="wide-icon">💬</div>
+      <div class="wide-info">
+        <div class="wide-title">Pesan ke Owner</div>
+        <div class="wide-sub">Kirim pertanyaan langsung</div>
+      </div>
+      <div class="wide-arrow">›</div>
+    </div>
+
+    <div class="section-title">📊 Status Bot</div>
+    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; font-size: 13px; color: var(--muted); line-height: 2;">
+      🤖 <b style="color: var(--text)">Bot Auto Order Bibi</b><br>
+      ⚙️ Versi: <span style="color: var(--accent)">2.0.0</span><br>
+      🟢 Status: <span style="color: var(--green)">Online</span><br>
+      📅 Framework: <span style="color: var(--blue)">Telegraf + Node.js</span>
+    </div>
+  </div><!-- end page-profile -->
+
+</div><!-- end container -->
+
+<!-- ===== BOTTOM NAV ===== -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchPage('home', this)">
+    <div class="nav-icon">🏠</div>
+    <div class="nav-label">Beranda</div>
+  </div>
+  <div class="nav-item" onclick="switchPage('profile', this)">
+    <div class="nav-icon">👤</div>
+    <div class="nav-label">Profil</div>
+  </div>
+</div>
+
+<!-- ===== MODAL TOP UP ===== -->
+<div class="modal-overlay" id="modal-topup" onclick="closeModal('modal-topup')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">💳 Top Up Saldo</div>
+    <div style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">Pilih nominal atau masukkan sendiri:</div>
+    <div class="modal-pill" id="topup-pills">
+      <div class="pill" onclick="selectPill(this, 10000)">Rp 10.000</div>
+      <div class="pill" onclick="selectPill(this, 20000)">Rp 20.000</div>
+      <div class="pill" onclick="selectPill(this, 50000)">Rp 50.000</div>
+      <div class="pill" onclick="selectPill(this, 100000)">Rp 100.000</div>
+      <div class="pill" onclick="selectPill(this, 200000)">Rp 200.000</div>
+      <div class="pill" onclick="selectPill(this, 500000)">Rp 500.000</div>
+    </div>
+    <input class="modal-input" id="topup-amount" type="number" placeholder="Atau ketik nominal (contoh: 75000)" min="1000" />
+    <button class="modal-confirm" onclick="confirmTopup()">🔄 Lanjut Top Up via QRIS</button>
+    <button class="modal-cancel" onclick="closeModal('modal-topup')">Batal</button>
+  </div>
+</div>
+
+<!-- ===== MODAL VOUCHER ===== -->
+<div class="modal-overlay" id="modal-voucher" onclick="closeModal('modal-voucher')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">🎟️ Redeem Voucher</div>
+    <div style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">Masukkan kode voucher diskon:</div>
+    <input class="modal-input" id="voucher-code" type="text" placeholder="Contoh: HEMAT20" style="text-transform: uppercase;" />
+    <button class="modal-confirm" onclick="confirmVoucher()">✅ Gunakan Voucher</button>
+    <button class="modal-cancel" onclick="closeModal('modal-voucher')">Batal</button>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast">✅ Berhasil</div>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+  tg.setHeaderColor('#0a0a0f');
+  tg.setBackgroundColor('#0a0a0f');
+
+  // Setup user info
+  const user = tg.initDataUnsafe?.user || {};
+  const firstName = user.first_name || 'Pengguna';
+  const userId = user.id || '-';
+  const username = user.username ? '@' + user.username : firstName;
+
+  document.getElementById('username-display').textContent = firstName;
+  document.getElementById('profile-name').textContent = firstName + (user.last_name ? ' ' + user.last_name : '');
+  document.getElementById('profile-id').textContent = 'ID: ' + userId;
+
+  // Track selected topup pill
+  let selectedTopup = null;
+
+  function selectPill(el, val) {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    selectedTopup = val;
+    document.getElementById('topup-amount').value = val;
+  }
+
+  // Page switching
+  function switchPage(name, navEl) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    navEl.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // Send command to bot
+  function sendCmd(cmd) {
+    const cmdMap = {
+      'nokos'   : 'nokos',
+      'scripts' : 'menu_scripts',
+      'apps'    : 'menu_apps',
+      'panel'   : 'menu_panel',
+      'vps'     : 'menu_vps',
+      'tools'   : 'menu_tools',
+      'contact' : 'menu_owner_contact',
+      'garansi' : 'garansi_panel',
+      'riwayat' : 'riwayat',
+    };
+    const data = cmdMap[cmd] || cmd;
+    showToast('⏳ Membuka ' + cmd + '...');
+    tg.sendData(JSON.stringify({ action: data }));
+  }
+
+  // Open external link
+  function openLink(type) {
+    const links = {
+      channel : 'https://t.me/testinimo',   // ganti dengan config.ChannelOwner
+      group   : 'https://t.me/+pWMMJkBxjfFmOTI1'       // ganti dengan config.GroupOwner
+    };
+    if (links[type]) tg.openTelegramLink(links[type]);
+  }
+
+  // Modals
+  function openTopup() {
+    document.getElementById('modal-topup').classList.add('open');
+    document.getElementById('topup-amount').focus();
+  }
+  function openVoucher() {
+    document.getElementById('modal-voucher').classList.add('open');
+    setTimeout(() => document.getElementById('voucher-code').focus(), 300);
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  // Confirm topup
+  function confirmTopup() {
+    const val = parseInt(document.getElementById('topup-amount').value);
+    if (!val || val < 1000) {
+      showToast('❌ Minimal Rp 1.000');
+      return;
+    }
+    closeModal('modal-topup');
+    showToast('🔄 Memproses top up Rp ' + val.toLocaleString('id-ID') + '...');
+    tg.sendData(JSON.stringify({ action: 'topup', amount: val }));
+  }
+
+  // Confirm voucher
+  function confirmVoucher() {
+    const kode = document.getElementById('voucher-code').value.trim().toUpperCase();
+    if (!kode || kode.length < 2) {
+      showToast('❌ Kode voucher tidak valid');
+      return;
+    }
+    closeModal('modal-voucher');
+    showToast('🎟️ Menggunakan voucher ' + kode + '...');
+    tg.sendData(JSON.stringify({ action: 'voucher', kode }));
+  }
+
+  // Toast
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // Main button (optional)
+  tg.MainButton.hide();
+
+  // Close modal on back button
+  tg.onEvent('backButtonClicked', () => {
+    const openModal = document.querySelector('.modal-overlay.open');
+    if (openModal) { openModal.classList.remove('open'); tg.BackButton.hide(); }
+  });
+</script>
+</body>
+</html>
